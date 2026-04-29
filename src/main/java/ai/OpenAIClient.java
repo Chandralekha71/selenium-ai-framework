@@ -1,6 +1,7 @@
 package ai;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonArray;
@@ -70,6 +71,27 @@ public class OpenAIClient {
 		System.out.println("AI generated Lead: " + leadData.getFullName());
 		return leadData;
 
+	}
+	
+	public String generateLeadSummary(int totalCount, Map<String,Integer> statusCounts) {
+		
+		// Build a plain text breakdown of the status counts
+		String breakdown = "";
+		for(Map.Entry<String,Integer> entry : statusCounts.entrySet()) {
+			breakdown = breakdown + " - " + entry.getKey() + " : " + entry.getValue() + "\n";
+		}
+		String prompt = """
+	            You are a QA reporting assistant.
+	            Write a concise 2-3 sentence paragraph summarising this Salesforce Lead distribution.
+	            Mention the total count and the most common status.
+	            Write only the paragraph — no headings or bullet points.
+
+	            Total Leads: %d
+	            Breakdown:
+	            %s
+	            """.formatted(totalCount, breakdown);
+		
+		return callAPI(prompt, 200).trim();
 	}
 
 	private String callAPI(String userPrompt, int maxTokens) {

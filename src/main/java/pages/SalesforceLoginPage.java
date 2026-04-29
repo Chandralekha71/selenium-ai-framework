@@ -23,11 +23,6 @@ public class SalesforceLoginPage {
 
     public void login() {
 
-
-        // Wait for the login form to appear before interacting
-//        new WebDriverWait(driver, Duration.ofSeconds(15))
-//                .until(ExpectedConditions.visibilityOfElementLocated(usernameField));
-
         driver.findElement(usernameField).sendKeys(ConfigReader.get("sf_username"));
         driver.findElement(passwordField).sendKeys(ConfigReader.get("sf_password"));
         driver.findElement(loginButton).click();
