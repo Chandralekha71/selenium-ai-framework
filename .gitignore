@@ -7,4 +7,5 @@ target/
 .settings/
 
 # Chrome profile — contains cached Salesforce session cookies
-chrome-profile/
+chrome-profile/.DS_Store
+test-output/

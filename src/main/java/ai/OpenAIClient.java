@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +20,8 @@ import okhttp3.Response;
 import utils.ConfigReader;
 
 public class OpenAIClient {
+
+	private static final Logger log = LogManager.getLogger(OpenAIClient.class);
 
 	private static final String API_URL = "https://api.openai.com/v1/chat/completions";
 	// This request body contains JSON data encoded in UTF-8
@@ -35,8 +40,8 @@ public class OpenAIClient {
 	}
 
 	public LeadData generateLeadData() {
+		log.info("Calling OpenAI to generate lead data");
 
-	    
 		String prompt = """
 		        Generate realistic test data for a Salesforce Lead record.
 		        Return ONLY a valid JSON object with exactly these fields:
@@ -68,13 +73,14 @@ public class OpenAIClient {
 				.leadStatus(j.get("leadStatus").getAsString())
 				.build();
 
-		System.out.println("AI generated Lead: " + leadData.getFullName());
+		log.info("AI generated lead: {}", leadData.getFullName());
 		return leadData;
 
 	}
 	
 	public String generateLeadSummary(int totalCount, Map<String,Integer> statusCounts) {
-		
+		log.info("Calling OpenAI for lead distribution summary");
+
 		// Build a plain text breakdown of the status counts
 		String breakdown = "";
 		for(Map.Entry<String,Integer> entry : statusCounts.entrySet()) {
@@ -94,12 +100,42 @@ public class OpenAIClient {
 		return callAPI(prompt, 200).trim();
 	}
 
+	// Pass the agent's response text and a plain-English intent description to OpenAI.
+	// Returns true if the AI confirms the response satisfies the intent, false otherwise.
+	// The AI's reasoning is logged so it appears in the test report.
+	public boolean validateIntent(String agentResponse, String expectedIntent) {
+		log.info("Validating intent: {}", expectedIntent);
+
+		String prompt = """
+		        You are a QA validation assistant evaluating a chatbot response.
+
+		        Expected intent: %s
+
+		        Chatbot response:
+		        \"\"\"%s\"\"\"
+
+		        Does the chatbot response satisfy the expected intent?
+		        Reply with a JSON object in exactly this format (no markdown, no extra text):
+		        {"pass": true, "reasoning": "one sentence explanation"}
+		        or
+		        {"pass": false, "reasoning": "one sentence explanation"}
+		        """.formatted(expectedIntent, agentResponse);
+
+		String raw = callAPI(prompt, 150).replaceAll("```json", "").replaceAll("```", "").trim();
+		JsonObject result = JsonParser.parseString(raw).getAsJsonObject();
+
+		boolean pass = result.get("pass").getAsBoolean();
+		String reasoning = result.get("reasoning").getAsString();
+
+		log.info("Intent validation — pass: {} | reasoning: {}", pass, reasoning);
+		return pass;
+	}
+
 	private String callAPI(String userPrompt, int maxTokens) {
 		// Build the request body as JSON
 		JsonObject body = new JsonObject();
 		body.addProperty("model", model);
 		body.addProperty("max_tokens", maxTokens);
-		;
 
 		JsonObject msg = new JsonObject();
 		msg.addProperty("role", "user");
@@ -119,8 +155,9 @@ public class OpenAIClient {
 
 		try (Response response = http.newCall(request).execute()) {
 			if (!response.isSuccessful()) {
-				throw new RuntimeException(
-						"OpenAI API error: HTTP " + response.code() + " — " + response.body().string());
+				String errorBody = response.body().string();
+				log.error("OpenAI API error: HTTP {} — {}", response.code(), errorBody);
+				throw new RuntimeException("OpenAI API error: HTTP " + response.code() + " — " + errorBody);
 			}
 
 			// Extract the text from choices[0].message.content
@@ -132,7 +169,8 @@ public class OpenAIClient {
 					.getAsString();
 
 		} catch (IOException e) {
-			throw new RuntimeException("OpenAI call failed" + e.getMessage(), e);
+			log.error("OpenAI API call failed: {}", e.getMessage());
+			throw new RuntimeException("OpenAI call failed: " + e.getMessage(), e);
 		}
 
 	}

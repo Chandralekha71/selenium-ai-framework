@@ -2,6 +2,8 @@ package pages;
 
 import java.time.Duration;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -12,6 +14,8 @@ import utils.ConfigReader;
 import utils.WaitUtils;
 
 public class LeadCreationPage {
+
+    private static final Logger log = LogManager.getLogger(LeadCreationPage.class);
 
     private WebDriver driver;
 
@@ -40,52 +44,58 @@ public class LeadCreationPage {
     }
 
     public void createLead(LeadData data) {
+        log.info("Navigating to New Lead form");
         driver.navigate().to(ConfigReader.get("new_lead_url"));
         WaitUtils.waitForVisibility(driver, modalHeader);
 
+        log.info("Filling lead form for: {} at {}", data.getFullName(), data.getCompany());
         setLeadValue(firstName, data.getFirstName());
         setLeadValue(lastName, data.getLastName());
         setLeadValue(company, data.getCompany());
         setLeadValue(email, data.getEmail());
         setLeadValue(phone, data.getPhone());
         selectPicklistValue(statusButton, data.getLeadStatus());
-        
-  
     }
 
     public void saveLeadRecord() {
+        log.info("Saving lead record");
         WaitUtils.waitAndClick(driver, saveButton);
-        
-     // Check if Salesforce shows a duplicate warning — if yes, save anyway
+
+        // Check if Salesforce shows a duplicate warning — if yes, save anyway
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.elementToBeClickable(saveButton))
-                .click();
+            WaitUtils.waitAndClick(driver, saveButton);
         } catch (Exception e) {
             // No duplicate warning appeared — normal save, do nothing
         }
-        
-     // Wait for navigation to the record detail page
+
+        // Wait for navigation to the record detail page
         new WebDriverWait(driver, Duration.ofSeconds(15))
             .until(ExpectedConditions.urlContains("/r/"));
     }
-    
+
     public boolean isLeadCreatedSuccessfully(String expectedName) {
         try {
             new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(ExpectedConditions.titleContains(expectedName));
+            log.info("Lead created successfully: {}", expectedName);
             return true;
         } catch (Exception e) {
+            log.warn("Lead creation could not be verified for: {}", expectedName);
             return false;
         }
     }
-    
+
     public String getCreatedLeadId() {
         String url = driver.getCurrentUrl();
         if (url.contains("/r/")) {
             String[] parts = url.split("/r/");
-            if (parts.length > 1) return parts[1].replace("/view", "").trim();
+            if (parts.length > 1) {
+                String recordId = parts[1].replace("/view", "").trim();
+                log.info("Created lead record ID: {}", recordId);
+                return recordId;
+            }
         }
+        log.warn("Could not extract record ID from URL: {}", url);
         return "UNKNOWN";
     }
  
