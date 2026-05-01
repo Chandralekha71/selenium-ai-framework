@@ -1,10 +1,7 @@
 package base;
 
-import java.time.Duration;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -42,16 +39,14 @@ public class BaseTest {
 		driver = new ChromeDriver(opts);
 		driver.manage().window().maximize();
 
-		// Applying page load timeout from config
-		//driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(ConfigReader.pageLoadTimeout()));
 	}
 
 	@AfterClass
 	public void tearDown() {
-//		if (driver != null) {
-//			log.info("Closing browser");
-//			driver.quit();
-//		}
+		if (driver != null) {
+			log.info("Closing browser");
+			driver.quit();
+		}
 	}
 
 }

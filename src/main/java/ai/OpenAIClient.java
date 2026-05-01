@@ -51,14 +51,14 @@ public class OpenAIClient {
 		          "company": "string (a realistic company name, e.g. Acme Corp, BlueSky Solutions)",
 		          "email": "string (email using the company domain, e.g. sarah@acmecorp.com)",
 		          "phone": "string (US format: +1-XXX-XXX-XXXX)",
-		          "leadStatus": "Working - Contacted"
+		          "leadStatus": "Open - Not Contacted"
 		        }
 		        No explanation, markdown, or text outside the JSON object.
 		        """;
 
 		String raw = callAPI(prompt, 200);
 
-		// Remove markdown fences if model accidentally wraps the JSON
+		// Remove markdown fences if model wraps the JSON
 		String cleaned = raw.replaceAll("```json", "").replaceAll("```", "").trim();
 
 		JsonObject j = JsonParser.parseString(cleaned).getAsJsonObject();
@@ -87,7 +87,7 @@ public class OpenAIClient {
 			breakdown = breakdown + " - " + entry.getKey() + " : " + entry.getValue() + "\n";
 		}
 		String prompt = """
-	            You are a QA reporting assistant.
+	            You are a QA tester reviewing Salesforce data as part of test execution report..
 	            Write a concise 2-3 sentence paragraph summarising this Salesforce Lead distribution.
 	            Mention the total count and the most common status.
 	            Write only the paragraph — no headings or bullet points.
@@ -107,14 +107,14 @@ public class OpenAIClient {
 		log.info("Validating intent: {}", expectedIntent);
 
 		String prompt = """
-		        You are a QA validation assistant evaluating a chatbot response.
+		        You are a QA tester evaluating a conversational AI agent response.
 
 		        Expected intent: %s
 
-		        Chatbot response:
+		        Agent response:
 		        \"\"\"%s\"\"\"
 
-		        Does the chatbot response satisfy the expected intent?
+		        Does the agent response satisfy the expected intent?
 		        Reply with a JSON object in exactly this format (no markdown, no extra text):
 		        {"pass": true, "reasoning": "one sentence explanation"}
 		        or

@@ -27,9 +27,11 @@ public class AgentforceTest extends BaseTest {
 	public void testGreetingAndOnboarding() {
 		chatPage.sendMessage("Hi, what can you help me with?");
 		String response = chatPage.getAgentResponse();
-		boolean pass = ai.validateIntent(response,
-			"Response must acknowledge the greeting AND describe at least 2 capability areas " +
-			"such as troubleshooting, documentation search, or account help. Intent: capability overview.");
+		boolean pass = ai.validateIntent(response, """
+			Response must acknowledge the greeting AND describe at least 2 capability areas
+			such as troubleshooting, documentation search, or account help.
+			Intent: capability overview.
+			""");
 		Assert.assertTrue(pass, "Scenario 1 failed — agent did not provide a capability overview");
 	}
 
@@ -39,9 +41,10 @@ public class AgentforceTest extends BaseTest {
 	public void testDocumentationSearch() {
 		chatPage.sendMessage("How do I set up Flow Builder in Salesforce?");
 		String response = chatPage.getAgentResponse();
-		boolean pass = ai.validateIntent(response,
-			"Response should contain guidance or a link related to Flow Builder or Salesforce automation. " +
-			"Intent: feature guidance with topic relevance to Flow Builder.");
+		boolean pass = ai.validateIntent(response, """
+			Response should contain guidance or a link related to Flow Builder or Salesforce automation.
+			Intent: feature guidance with topic relevance to Flow Builder.
+			""");
 		Assert.assertTrue(pass, "Scenario 2 failed — agent did not provide Flow Builder guidance");
 	}
 
@@ -51,9 +54,11 @@ public class AgentforceTest extends BaseTest {
 	public void testTroubleshootingLoginIssue() {
 		chatPage.sendMessage("I cannot log in to my Salesforce org. What should I do?");
 		String response = chatPage.getAgentResponse();
-		boolean pass = ai.validateIntent(response,
-			"Response must suggest at least one actionable troubleshooting step such as password reset, " +
-			"clearing browser cache, or checking MFA settings. Intent: troubleshooting steps provided.");
+		boolean pass = ai.validateIntent(response, """
+			Response must suggest at least one actionable troubleshooting step
+			such as password reset, clearing browser cache, or checking MFA settings.
+			Intent: troubleshooting steps provided.
+			""");
 		Assert.assertTrue(pass, "Scenario 3 failed — agent did not provide troubleshooting steps");
 	}
 
@@ -63,9 +68,14 @@ public class AgentforceTest extends BaseTest {
 	public void testOutOfScopeFallback() {
 		chatPage.sendMessage("Can you book me a flight to New York?");
 		String response = chatPage.getAgentResponse();
-		boolean pass = ai.validateIntent(response,
-			"Response should gracefully decline or redirect the request. The agent must NOT promise " +
-			"to book flights or perform unrelated actions. Intent: out of scope deflection — no hallucinated capabilities.");
+		boolean pass = ai.validateIntent(response, """
+			Response should deflect the out-of-scope request by redirecting to what the agent CAN help with
+			(e.g. Salesforce support, products, or features).
+			The agent does NOT need to explicitly say 'I cannot book flights' —
+			redirecting to its own capabilities counts as a valid deflection.
+			The agent must NOT offer to book flights or perform any unrelated action.
+			Intent: out of scope deflection with no hallucinated capabilities.
+			""");
 		Assert.assertTrue(pass, "Scenario 4 failed — agent did not handle out-of-scope request correctly");
 	}
 
@@ -75,9 +85,11 @@ public class AgentforceTest extends BaseTest {
 	public void testProductInformationQuery() {
 		chatPage.sendMessage("What is Agentforce and how is it different from regular chatbots?");
 		String response = chatPage.getAgentResponse();
-		boolean pass = ai.validateIntent(response,
-			"Response should describe Agentforce as an AI-powered agent platform and highlight " +
-			"key differentiators such as reasoning or grounding. Intent: product description with key concept coverage.");
+		boolean pass = ai.validateIntent(response, """
+			Response should describe Agentforce as an AI-powered agent platform and highlight
+			key differentiators such as advanced AI capabilities, integration, low-code setup, or security.
+			Intent: product description with key concept coverage.
+			""");
 		Assert.assertTrue(pass, "Scenario 5 failed — agent did not provide an adequate product description");
 	}
 

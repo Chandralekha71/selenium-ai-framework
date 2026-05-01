@@ -65,7 +65,7 @@ public class LeadCreationPage {
         try {
             WaitUtils.waitAndClick(driver, saveButton);
         } catch (Exception e) {
-            // No duplicate warning appeared — normal save, do nothing
+            // No duplicate warning appeared
         }
 
         // Wait for navigation to the record detail page
@@ -73,17 +73,17 @@ public class LeadCreationPage {
             .until(ExpectedConditions.urlContains("/r/"));
     }
 
-    public boolean isLeadCreatedSuccessfully(String expectedName) {
-        try {
-            new WebDriverWait(driver, Duration.ofSeconds(10))
-                .until(ExpectedConditions.titleContains(expectedName));
-            log.info("Lead created successfully: {}", expectedName);
-            return true;
-        } catch (Exception e) {
-            log.warn("Lead creation could not be verified for: {}", expectedName);
-            return false;
-        }
-    }
+//    public boolean isLeadCreatedSuccessfully(String expectedName) {
+//        try {
+//            new WebDriverWait(driver, Duration.ofSeconds(10))
+//                .until(ExpectedConditions.titleContains(expectedName));
+//            log.info("Lead created successfully: {}", expectedName);
+//            return true;
+//        } catch (Exception e) {
+//            log.warn("Lead creation could not be verified for: {}", expectedName);
+//            return false;
+//        }
+//    }
 
     public String getCreatedLeadId() {
         String url = driver.getCurrentUrl();

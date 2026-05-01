@@ -19,12 +19,7 @@ public class AgentforceChatPage {
 
 	private WebDriver driver;
 
-	// Snapshot of the last bot response text captured just before each sendMessage() call.
-	// getAgentResponse() waits until this text changes, guaranteeing it returns the NEW
-	// reply rather than an already-visible response from a previous turn.
-	private String lastBotResponseText = "";
-
-	// [1] DEEP_FIND_SCRIPT — used by deepFind() to locate a single element across all shadow roots
+	// Recursive JS script to pierce nested shadow roots to find a single element
 	private static final String DEEP_FIND_SCRIPT = """
 		function deepFind(root, selector) {
 		  let el = root.querySelector(selector);
@@ -52,14 +47,11 @@ public class AgentforceChatPage {
 	}
 
 	// End any previous conversation via the three-dots menu
-	// Guarded with try/catch — if no previous conversation exists, the menu
-	// won't be present and we skip the reset silently
 	public void resetConversation() {
 		log.info("Checking for existing Agentforce conversation to reset");
 		try {
 			JavascriptExecutor js = (JavascriptExecutor) driver;
 
-			// [2] resetConversation() — click options menu
 			js.executeScript("""
 				function deepFind(root, selector) {
 				  let el = root.querySelector(selector);
@@ -79,7 +71,6 @@ public class AgentforceChatPage {
 			// Small pause to allow dropdown animation to complete
 			Thread.sleep(500);
 
-			// [3] resetConversation() — click "End conversation" button
 			js.executeScript("""
 				function deepFind(root, selector) {
 				  let el = root.querySelector(selector);
@@ -110,28 +101,10 @@ public class AgentforceChatPage {
 			.until(d -> (WebElement) js.executeScript(DEEP_FIND_SCRIPT, cssSelector));
 	}
 
-
-	// [placeholder='Type your message...'] width > 0 → chat modal is open, use modal textarea
-	// [placeholder='Type your message...'] width = 0 → chat modal not open, fall back to main page input
+	// Type message and send via Enter, then wait for Agentforce to finish responding.
+	// Textarea selection via placeholder
 	public void sendMessage(String message) {
 		log.info("Sending message: {}", message);
-		JavascriptExecutor js = (JavascriptExecutor) driver;
-
-		// [4] sendMessage() — snapshot last bot response text before sending
-		Object captured = js.executeScript("""
-			function deepFindAll(root, selector) {
-			  let results = Array.from(root.querySelectorAll(selector));
-			  for (let child of root.querySelectorAll('*')) {
-			    if (child.shadowRoot) results = results.concat(deepFindAll(child.shadowRoot, selector));
-			  }
-			  return results;
-			}
-			let msgs = deepFindAll(document, '.bot-message [data-testid="message"]');
-			return msgs.length > 0 ? msgs[msgs.length - 1].innerText : '';
-			""");
-		lastBotResponseText = (captured != null) ? (String) captured : "";
-		log.info("Snapshot before send ({}chars)", lastBotResponseText.length());
-
 		WebElement textarea = deepFind("[placeholder='Type your message...']");
 		if (textarea.getSize().getWidth() == 0) {
 			log.info("Chat modal not open — using main page input");
@@ -141,33 +114,42 @@ public class AgentforceChatPage {
 		}
 		new Actions(driver).click(textarea).sendKeys(message).sendKeys(Keys.RETURN).perform();
 		log.info("Message sent successfully");
+
+		// Wait for typing indicator to appear (Agentforce started generating)
+		deepFind("[class*=\"typing-ind\"]");
+		log.info("Agentforce is typing...");
+
+		// Wait for typing indicator to disappear 
+		new WebDriverWait(driver, Duration.ofSeconds(30))
+			.until(d -> (Boolean) ((JavascriptExecutor) d).executeScript("""
+				function deepFind(root, selector) {
+				  let el = root.querySelector(selector);
+				  if (el) return el;
+				  for (let child of root.querySelectorAll('*')) {
+				    if (child.shadowRoot) { el = deepFind(child.shadowRoot, selector); if (el) return el; }
+				  }
+				  return null;
+				}
+				return deepFind(document, '[class*="typing-ind"]') === null;
+				"""));
+		log.info("Agentforce finished responding");
 	}
 
-	// Wait for and return the Agentforce response to the most recently sent message.
-	// Passes the pre-send text snapshot as arguments[0] so JS can compare without
-	// escaping issues. Returns only when the last bot message text has changed.
+	// Returns the last Agent message text 
 	public String getAgentResponse() {
-		log.info("Waiting for new Agentforce response (snapshot: {}chars)...", lastBotResponseText.length());
+		log.info("Fetching Agentforce response...");
 		JavascriptExecutor js = (JavascriptExecutor) driver;
-
-		// [5] getAgentResponse() — wait for last bot message text to differ from snapshot
-		String script = """
-			function deepFindAll(root, selector) {
-			  let results = Array.from(root.querySelectorAll(selector));
+		String response = (String) js.executeScript("""
+			function deepFindAll(root, selector, results = []) {
+			  root.querySelectorAll(selector).forEach(el => results.push(el));
 			  for (let child of root.querySelectorAll('*')) {
-			    if (child.shadowRoot) results = results.concat(deepFindAll(child.shadowRoot, selector));
+			    if (child.shadowRoot) deepFindAll(child.shadowRoot, selector, results);
 			  }
 			  return results;
 			}
 			let msgs = deepFindAll(document, '.bot-message [data-testid="message"]');
-			let last = msgs.length > 0 ? msgs[msgs.length - 1].innerText : null;
-			return (last && last !== arguments[0]) ? last : null;
-			""";
-
-		String response = (String) new WebDriverWait(driver, Duration.ofSeconds(30))
-			.until(d -> (String) js.executeScript(script, lastBotResponseText));
-
-		lastBotResponseText = response;
+			return msgs.length > 0 ? msgs[msgs.length - 1].innerText : null;
+			""");
 		log.info("Agentforce response received: {}", response);
 		return response;
 	}
