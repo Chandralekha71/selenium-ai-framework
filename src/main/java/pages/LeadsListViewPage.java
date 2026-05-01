@@ -37,12 +37,14 @@ public class LeadsListViewPage {
     private By rowsLocator = By.xpath("//table[contains(@class,'slds-table')]//tbody/tr");
 	
 	public void openAllLeadsListView() {
-		log.info("Navigating to All Leads list view");
+		
+		log.info("Navigating to All Open Leads list view");
 		driver.navigate().to(ConfigReader.get("leads_list_view_url"));
 
 		// Wait for the list container to be visible
 		WebElement container = WaitUtils.waitForVisibility(driver, listContainer);
-
+		
+		//Scrolling to load all the lead records
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int previousCount = 0;
 

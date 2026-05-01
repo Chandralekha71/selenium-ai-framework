@@ -28,9 +28,8 @@ public class BaseTest {
 	public void setUp() {
 		log.info("Setting up Chrome browser");
 
-		// Build ChromeOptions FIRST before creating the driver
+		// Build ChromeOptions before creating the driver
 		ChromeOptions opts = new ChromeOptions();
-		//opts.setPageLoadStrategy(PageLoadStrategy.EAGER);  // return early when DOM is ready
 
 		String profileDir = ConfigReader.get("chrome_profile_dir");
 

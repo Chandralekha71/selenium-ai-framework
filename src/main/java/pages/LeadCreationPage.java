@@ -44,7 +44,7 @@ public class LeadCreationPage {
     }
 
     public void createLead(LeadData data) {
-        log.info("Navigating to New Lead form");
+        log.info("Navigating to Lead New Screen");
         driver.navigate().to(ConfigReader.get("new_lead_url"));
         WaitUtils.waitForVisibility(driver, modalHeader);
 

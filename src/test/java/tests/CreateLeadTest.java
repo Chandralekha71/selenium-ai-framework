@@ -8,7 +8,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import ai.OpenAIClient;
+import ai.AIClient;
 import base.BaseTest;
 import models.LeadData;
 import pages.LeadCreationPage;
@@ -19,12 +19,12 @@ public class CreateLeadTest extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(CreateLeadTest.class);
 
-	private OpenAIClient aiClient;
+	private AIClient aiClient;
 	private LeadData leadData;
 
 	@BeforeClass
 	public void initAI() {
-		aiClient = new OpenAIClient();
+		aiClient = new AIClient();
 	}
 
 	@Test(priority = 1)

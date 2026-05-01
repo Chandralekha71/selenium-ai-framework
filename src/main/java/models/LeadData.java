@@ -4,13 +4,13 @@ public class LeadData {
 
 	private final String firstName;
 	private final String lastName;
-	private String company;
+	private final String company;
 	private String email;
 	private final String phone;
 	private final String leadStatus;
 	
 	
-	//The private constructor is — receives the Builder object and copies all values from it.
+	//Private constructor - receives the Builder object and copies all values from it.
 	private LeadData(Builder builder) {
 		this.firstName =  builder.firstName;
 		this.lastName = builder.lastName;
@@ -29,16 +29,11 @@ public class LeadData {
     public String getLeadStatus() { return leadStatus; }
     public String getFullName()   { return firstName + " " + lastName; }
     
-    //to set the company and email fields with unique number
+    //to set the email fields with unique number
     public void setEmail(String email) {
         this.email = email;
     }
-    
-    public void setCompany(String company) {
-        this.company = company;
-    }
-    
-	
+       	
 	
 	public static class Builder{
 		

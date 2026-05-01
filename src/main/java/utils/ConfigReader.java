@@ -31,7 +31,6 @@ public class ConfigReader {
 		return properties.getProperty(key);
 	}
 	
-    public static int     pageLoadTimeout()   { try { return Integer.parseInt(get("page_load_timeout")); } catch (Exception e) { return 30; } }
     public static int     elementWaitTimeout(){ try { return Integer.parseInt(get("element_wait_timeout")); } catch (Exception e) { return 15; } }
 
 }

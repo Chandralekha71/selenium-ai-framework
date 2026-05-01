@@ -12,7 +12,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import ai.OpenAIClient;
+import ai.AIClient;
 import base.BaseTest;
 import pages.AgentforceChatPage;
 
@@ -21,12 +21,12 @@ public class AgentforceTest extends BaseTest {
 	private static final Logger log = LogManager.getLogger(AgentforceTest.class);
 
 	private AgentforceChatPage chatPage;
-	private OpenAIClient ai;
+	private AIClient ai;
 
 	@BeforeClass
 	public void init() {
 		chatPage = new AgentforceChatPage(driver);
-		ai = new OpenAIClient();
+		ai = new AIClient();
 		chatPage.open();
 	}
 
